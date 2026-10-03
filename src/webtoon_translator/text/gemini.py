@@ -65,6 +65,9 @@ def google_transport(api_key: str, model: str, contents: list[Any], cfg: GeminiC
         config=types.GenerateContentConfig(
             temperature=cfg.temperature,
             response_mime_type="application/json",
+            # On n'utilise pas d'outils : on désactive explicitement l'appel automatique
+            # de fonctions (supprime l'avertissement "AFC" du SDK).
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
         ),
     )
     return response.text

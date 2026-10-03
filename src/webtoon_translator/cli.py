@@ -5,6 +5,7 @@
 --evaluate CSV      : précision de chaque règle d'attribution (rapport annoté à la main)
 --check             : vérifie l'installation
 --debug-vision      : dessine bulles et queues détectées sur des pages
+--figure            : génère docs/attribution.png (schéma de l'attribution des locuteurs)
 """
 
 from __future__ import annotations
@@ -90,8 +91,18 @@ def main(argv: list[str] | None = None) -> int:
                         help="Reprendre une traduction interrompue (avec --translate)")
     parser.add_argument("--evaluate", metavar="CSV",
                         help="Calculer la précision à partir d'un rapport.csv annoté")
+    parser.add_argument("--figure", action="store_true",
+                        help="Générer le schéma de l'attribution des locuteurs (docs/attribution.png)")
     parser.add_argument("--out", help="Dossier de sortie (défaut : outputs/<nom du dossier>)")
     args = parser.parse_args(argv)
+
+    if args.figure:
+        from .figure import attribution_figure
+        path = args.out or "docs/attribution.png"
+        for d in attribution_figure(path, load_config(args.config)):
+            print(f"  décision : classe {d.class_id} ({d.source.value})")
+        print(f"Figure enregistrée : {path}")
+        return 0
 
     if args.translate:
         return translate(args.translate, args.out, args.config, args.resume)

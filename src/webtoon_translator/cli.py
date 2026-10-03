@@ -1,6 +1,7 @@
 """Point d'entrée en ligne de commande.
 
-Pour l'instant (étape 1) : seulement `--check`, qui vérifie l'installation.
+--check         : vérifie l'installation (étape 1)
+--debug-vision  : dessine bulles et queues détectées sur des pages (étape 3)
 La commande de traduction sera ajoutée à l'étape 6.
 """
 
@@ -56,10 +57,23 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--config", help="Fichier YAML qui surcharge config/default.yaml")
     parser.add_argument("--check", action="store_true", help="Vérifier l'installation")
+    parser.add_argument("--debug-vision", metavar="DOSSIER",
+                        help="Annoter les bulles et queues détectées sur les images du dossier")
+    parser.add_argument("--out", default="outputs/debug",
+                        help="Dossier de sortie du débogage (défaut : outputs/debug)")
     args = parser.parse_args(argv)
 
     if args.check:
         return check(args.config)
+
+    if args.debug_vision:
+        from .debug import debug_vision  # import tardif : charge OpenCV et YOLO
+        try:
+            debug_vision(load_config(args.config), args.debug_vision, args.out)
+        except (ConfigError, FileNotFoundError, ValueError) as e:
+            print(f"[ERREUR] {e}")
+            return 1
+        return 0
 
     parser.print_help()
     return 0

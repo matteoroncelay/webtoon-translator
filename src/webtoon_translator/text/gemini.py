@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Callable, Iterator, Sequence
+from dataclasses import dataclass
 from typing import Any, TypeVar
 
 from ..config import GeminiConfig
@@ -25,6 +26,15 @@ T = TypeVar("T")
 # Signature du "transport" : (clé, modèle, contenus, config) -> texte de la réponse.
 # Injectable, pour tester toute la logique sans appeler la vraie API.
 Transport = Callable[[str, str, list[Any], GeminiConfig], str | None]
+
+
+@dataclass(frozen=True)
+class ImageData:
+    """Image jointe à une requête. Indépendante du SDK : c'est le transport
+    qui la convertit au format attendu par Google."""
+
+    data: bytes
+    mime_type: str = "image/jpeg"
 
 
 class GeminiError(RuntimeError):
@@ -47,9 +57,11 @@ def google_transport(api_key: str, model: str, contents: list[Any], cfg: GeminiC
     from google.genai import types
 
     client = genai.Client(api_key=api_key)
+    parts = [types.Part.from_bytes(data=c.data, mime_type=c.mime_type)
+             if isinstance(c, ImageData) else c for c in contents]
     response = client.models.generate_content(
         model=model,
-        contents=contents,
+        contents=parts,
         config=types.GenerateContentConfig(
             temperature=cfg.temperature,
             response_mime_type="application/json",

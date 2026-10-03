@@ -214,12 +214,15 @@ class Chapter:
     pages: list[Page] = field(default_factory=list)
     # Résumé de l'histoire, mis à jour page après page par la traduction
     story_context: str = ""
+    # Étapes déjà terminées (permet de reprendre après une interruption)
+    steps_done: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
             "format_version": 1,
             "name": self.name,
             "story_context": self.story_context,
+            "steps_done": self.steps_done,
             "pages": [p.to_dict() for p in self.pages],
         }
 
@@ -232,4 +235,5 @@ class Chapter:
             name=d["name"],
             pages=[Page.from_dict(p) for p in d.get("pages", [])],
             story_context=d.get("story_context", ""),
+            steps_done=list(d.get("steps_done", [])),
         )

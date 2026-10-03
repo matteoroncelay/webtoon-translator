@@ -55,6 +55,8 @@ gemini:
   context_max_chars: 4000    # taille max du résumé de l'histoire gardé en mémoire
 
 render:
-  font_size: 35
-  outline_width: 4
-  wrap_ratio: 0.9            # largeur max du texte = 90 % de la bulle
+  font_size: 35              # taille maximale ; réduite automatiquement si le texte ne tient pas
+  min_font_size: 14
+  outline_width: 3
+  wrap_ratio: 0.85           # largeur max du texte = 85 % de la bulle
+  erase_original: true       # recouvre le texte coréen d'un fond blanc avant d'écrire le français

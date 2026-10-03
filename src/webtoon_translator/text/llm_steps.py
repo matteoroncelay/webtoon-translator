@@ -22,7 +22,7 @@ from ..models import (
 from ..reasoning.characters import CharacterRegistry
 from ..reasoning.presence import in_scene
 from . import prompts
-from .gemini import GeminiClient, batched
+from .gemini import GeminiClient, ImageData, batched
 
 
 def bubble_uid(page: Page, bubble: Bubble) -> str:
@@ -107,17 +107,15 @@ def analyze_context(chapter: Chapter, client: GeminiClient, registry: CharacterR
 # 3. Traduction, page par page, avec mémoire de l'histoire
 # --------------------------------------------------------------------------- #
 
-def _encode_page(page_bgr: np.ndarray, max_height: int = 3000) -> Any:
+def _encode_page(page_bgr: np.ndarray, max_height: int = 3000) -> ImageData:
     """Image JPEG pour le LLM (réduite si la page est très haute)."""
-    from google.genai import types  # import tardif : seulement si on envoie l'image
-
     h, w = page_bgr.shape[:2]
     if h > max_height:
         page_bgr = cv2.resize(page_bgr, (int(w * max_height / h), max_height))
     ok, buffer = cv2.imencode(".jpg", page_bgr, [cv2.IMWRITE_JPEG_QUALITY, 85])
     if not ok:
         raise ValueError("Impossible d'encoder l'image de la page")
-    return types.Part.from_bytes(data=buffer.tobytes(), mime_type="image/jpeg")
+    return ImageData(buffer.tobytes(), "image/jpeg")
 
 
 def translate_page(chapter: Chapter, page: Page, client: GeminiClient,

@@ -1,8 +1,10 @@
 """Point d'entrée en ligne de commande.
 
---check         : vérifie l'installation (étape 1)
---debug-vision  : dessine bulles et queues détectées sur des pages (étape 3)
-La commande de traduction sera ajoutée à l'étape 6.
+--translate DOSSIER : traduit les images du dossier (résultat dans --out)
+--resume            : reprend une traduction interrompue
+--evaluate CSV      : précision de chaque règle d'attribution (rapport annoté à la main)
+--check             : vérifie l'installation
+--debug-vision      : dessine bulles et queues détectées sur des pages
 """
 
 from __future__ import annotations
@@ -10,7 +12,7 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .config import ConfigError, load_config, load_secrets
+from .config import ConfigError, gcloud_default_credentials, load_config, load_secrets
 
 
 def check(config_path: str | None) -> int:
@@ -36,18 +38,42 @@ def check(config_path: str | None) -> int:
             problems += 1
 
     secrets = load_secrets()
-    for label, value in [
-        ("GEMINI_API_KEY", secrets.gemini_api_key),
-        ("GOOGLE_APPLICATION_CREDENTIALS", secrets.google_credentials),
-    ]:
-        if value:
-            print(f"[OK] {label} définie.")
-        else:
-            print(f"[MANQUANT] {label} (voir .env.example)")
-            problems += 1
+    if secrets.gemini_api_key:
+        print("[OK] GEMINI_API_KEY définie.")
+    else:
+        print("[MANQUANT] GEMINI_API_KEY (voir .env.example)")
+        problems += 1
+
+    adc = gcloud_default_credentials()
+    if secrets.google_credentials:
+        print("[OK] Google Vision : GOOGLE_APPLICATION_CREDENTIALS définie.")
+    elif adc:
+        print(f"[OK] Google Vision : connexion gcloud trouvée ({adc})")
+    else:
+        print("[MANQUANT] Google Vision : ni GOOGLE_APPLICATION_CREDENTIALS, "
+              "ni connexion `gcloud auth application-default login`")
+        problems += 1
 
     print("\nTout est prêt." if problems == 0 else f"\n{problems} élément(s) à régler.")
     return 0 if problems == 0 else 1
+
+
+def translate(input_dir: str, out: str | None, config_path: str | None, resume: bool) -> int:
+    from pathlib import Path
+
+    from .pipeline import build_components, run_pipeline
+    from .text import GeminiError
+    output = Path(out or f"outputs/{Path(input_dir).name}")
+    try:
+        config = load_config(config_path)
+        components = build_components(config, load_secrets())
+        run_pipeline(input_dir, output, config, components, resume=resume)
+    except (ConfigError, FileNotFoundError, ValueError, GeminiError) as e:
+        print(f"[ERREUR] {e}")
+        if (output / "chapter.json").is_file():
+            print("Astuce : relance avec --resume pour reprendre là où ça s'est arrêté.")
+        return 1
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -59,9 +85,26 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="Vérifier l'installation")
     parser.add_argument("--debug-vision", metavar="DOSSIER",
                         help="Annoter les bulles et queues détectées sur les images du dossier")
-    parser.add_argument("--out", default="outputs/debug",
-                        help="Dossier de sortie du débogage (défaut : outputs/debug)")
+    parser.add_argument("--translate", metavar="DOSSIER", help="Traduire les images du dossier")
+    parser.add_argument("--resume", action="store_true",
+                        help="Reprendre une traduction interrompue (avec --translate)")
+    parser.add_argument("--evaluate", metavar="CSV",
+                        help="Calculer la précision à partir d'un rapport.csv annoté")
+    parser.add_argument("--out", help="Dossier de sortie (défaut : outputs/<nom du dossier>)")
     args = parser.parse_args(argv)
+
+    if args.translate:
+        return translate(args.translate, args.out, args.config, args.resume)
+
+    if args.evaluate:
+        from .io.report import evaluate_report
+        results = evaluate_report(args.evaluate)
+        if not results:
+            print("Aucune ligne annotée (colonne 'correct' : 1 ou 0).")
+            return 1
+        for source, (ok, n) in sorted(results.items()):
+            print(f"{source:12s} : {ok}/{n} corrects ({100 * ok / n:.0f} %)")
+        return 0
 
     if args.check:
         return check(args.config)
@@ -69,7 +112,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.debug_vision:
         from .debug import debug_vision  # import tardif : charge OpenCV et YOLO
         try:
-            debug_vision(load_config(args.config), args.debug_vision, args.out)
+            debug_vision(load_config(args.config), args.debug_vision, args.out or "outputs/debug")
         except (ConfigError, FileNotFoundError, ValueError) as e:
             print(f"[ERREUR] {e}")
             return 1

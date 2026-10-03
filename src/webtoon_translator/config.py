@@ -95,8 +95,10 @@ class GeminiConfig:
 @dataclass(frozen=True)
 class RenderConfig:
     font_size: int
+    min_font_size: int
     outline_width: int
     wrap_ratio: float
+    erase_original: bool
 
 
 @dataclass(frozen=True)
@@ -194,6 +196,20 @@ def load_config(user_config: str | Path | None = None) -> Config:
     if user_config is not None:
         data = _deep_merge(data, _read_yaml(Path(user_config)))
     return _build(Config, data, "config")
+
+
+def gcloud_default_credentials() -> Path | None:
+    """Fichier créé par `gcloud auth application-default login`, s'il existe.
+
+    Google Cloud (donc l'OCR Vision) l'utilise automatiquement quand
+    GOOGLE_APPLICATION_CREDENTIALS n'est pas défini.
+    """
+    if os.name == "nt":
+        base = Path(os.getenv("APPDATA", ""))
+    else:
+        base = Path(os.getenv("XDG_CONFIG_HOME") or Path.home() / ".config")
+    path = base / "gcloud" / "application_default_credentials.json"
+    return path if path.is_file() else None
 
 
 def load_secrets(env_file: str | Path | None = None) -> Secrets:

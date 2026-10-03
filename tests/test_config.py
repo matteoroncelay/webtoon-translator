@@ -26,3 +26,15 @@ def test_unknown_key_is_rejected(tmp_path: Path):
     user.write_text("speaker:\n  max_angle_eror: 30.0\n", encoding="utf-8")
     with pytest.raises(ConfigError, match="inconnue"):
         load_config(user)
+
+
+def test_gcloud_default_credentials_detected(tmp_path, monkeypatch):
+    import os
+    from webtoon_translator.config import gcloud_default_credentials
+    var = "APPDATA" if os.name == "nt" else "XDG_CONFIG_HOME"
+    monkeypatch.setenv(var, str(tmp_path))
+    assert gcloud_default_credentials() is None
+    adc = tmp_path / "gcloud" / "application_default_credentials.json"
+    adc.parent.mkdir()
+    adc.write_text("{}")
+    assert gcloud_default_credentials() == adc

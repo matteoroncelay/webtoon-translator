@@ -87,6 +87,9 @@ class GeminiConfig:
     batch_size: int
     max_retries: int
     base_delay: float
+    temperature: float
+    send_page_image: bool
+    context_max_chars: int
 
 
 @dataclass(frozen=True)

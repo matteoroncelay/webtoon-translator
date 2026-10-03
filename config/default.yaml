@@ -49,7 +49,10 @@ gemini:
   model: gemini-2.5-flash
   batch_size: 40             # nb max de bulles par requête (l'ancien code envoyait tout d'un coup)
   max_retries: 5
-  base_delay: 5.0            # secondes, délai qui augmente à chaque nouvelle tentative
+  base_delay: 5.0            # secondes, délai qui double à chaque nouvelle tentative
+  temperature: 0.2           # faible = réponses plus stables
+  send_page_image: true      # joindre l'image de la page à la traduction
+  context_max_chars: 4000    # taille max du résumé de l'histoire gardé en mémoire
 
 render:
   font_size: 35

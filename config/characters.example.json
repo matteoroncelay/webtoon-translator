@@ -1,0 +1,30 @@
+{
+  "_comment": "Exemple de fiches personnages. Copier en characters.json et adapter à sa série. 'yolo_class' = numéro de classe du modèle de détection de personnages.",
+  "characters": {
+    "minjun": {
+      "yolo_class": 0,
+      "role": "Protagoniste, lycéen",
+      "tone": ["informel", "banmal", "énergique"],
+      "relations": {
+        "seoyeon": "Amie d'enfance (tutoiement, ton complice)",
+        "teacher_park": "Professeur (vouvoiement, ton respectueux)"
+      }
+    },
+    "seoyeon": {
+      "yolo_class": 1,
+      "role": "Amie d'enfance de Minjun",
+      "tone": ["calme", "ironique"],
+      "relations": {
+        "minjun": "Ami d'enfance (tutoiement)"
+      }
+    },
+    "teacher_park": {
+      "yolo_class": 2,
+      "role": "Professeur principal",
+      "tone": ["formel", "strict"],
+      "relations": {
+        "minjun": "Élève (tutoiement de l'adulte vers l'élève)"
+      }
+    }
+  }
+}

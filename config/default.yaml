@@ -1,0 +1,57 @@
+# Configuration par défaut du pipeline.
+# Tous les seuils qui étaient dispersés dans les anciens scripts sont regroupés ici.
+# Pour changer une valeur, crée ton propre fichier YAML (seulement les clés à modifier)
+# et passe-le avec --config : il sera fusionné par-dessus celui-ci.
+
+paths:
+  character_model: models/detect_characters.pt   # YOLO détection personnages (propre à chaque série)
+  bubble_model: models/detect_bubbles.pt          # YOLO détection bulles (3 classes)
+  bubble_seg_model: models/segment_bubbles.pt     # YOLO segmentation des bulles (queue)
+  characters_file: config/characters.json         # fiches personnages (voir characters.example.json)
+  font: arial.ttf
+
+# Découpage des pages très hautes en panneaux, en se calant sur les gouttières
+gutters:
+  target_panel_height: 750   # hauteur visée d'un panneau (px)
+  panel_min_height: 200      # hauteur minimale d'un panneau (px)
+  gutter_min_height: 20      # hauteur minimale d'une gouttière (px)
+  white_threshold: 230       # pixel >= : considéré blanc
+  black_threshold: 25        # pixel <= : considéré noir
+  min_uniform_ratio: 0.99    # part de pixels blancs/noirs pour qu'une ligne soit une gouttière
+
+detection:
+  imgsz: 640
+  iou: 0.45
+  character_conf: 0.5
+  bubble_conf: 0.6
+
+tail:
+  seg_imgsz: 320
+  seg_conf: 0.5
+  seg_iou: 0.5
+  crop_padding: 40           # NOUVEAU : marge autour de la bulle pour ne pas couper la queue (px)
+  resample_step: 4.0         # NOUVEAU : pas de rééchantillonnage du contour (px)
+  tip_window: 20.0           # NOUVEAU : demi-fenêtre pour mesurer l'angle de la pointe (px, et non plus en nb de points)
+  max_tip_angle: 140.0       # au-delà, on considère qu'il n'y a pas de pointe
+  base_search_length: 240.0  # longueur de contour explorée pour trouver la base de la queue (px)
+
+presence:
+  strong_conf: 0.75          # confiance YOLO au-dessus de laquelle un perso est "visuel" (score 3)
+
+speaker:
+  max_tip_distance: 1000.0   # rayon du cône partant de la pointe (px)
+  max_angle_error: 22.5      # demi-ouverture du cône (degrés)
+  near_distance: 1300.0      # "proche de la bulle" pour la déduction par élimination (px)
+  weight_distance: 1.0
+  weight_angle: 2.0
+
+gemini:
+  model: gemini-2.5-flash
+  batch_size: 40             # nb max de bulles par requête (l'ancien code envoyait tout d'un coup)
+  max_retries: 5
+  base_delay: 5.0            # secondes, délai qui augmente à chaque nouvelle tentative
+
+render:
+  font_size: 35
+  outline_width: 4
+  wrap_ratio: 0.9            # largeur max du texte = 90 % de la bulle

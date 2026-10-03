@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "webtoon-translator"
+version = "0.1.0"
+description = "Traduction automatique de webtoons coréens vers le français : détection, attribution des dialogues et traduction contextuelle."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Matteo Roncelay" }]
+dependencies = [
+    "numpy>=1.26",
+    "opencv-python>=4.9",
+    "pillow>=10.0",
+    "pyyaml>=6.0",
+    "python-dotenv>=1.0",
+    "ultralytics>=8.1",
+    "google-cloud-vision>=3.7",
+    "google-genai>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+webtoon-translator = "webtoon_translator.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

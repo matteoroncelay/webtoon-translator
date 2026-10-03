@@ -69,7 +69,7 @@ permet d'évaluer chaque méthode séparément (voir *Évaluation*).
 Python 3.11 ou plus récent.
 
 ```powershell
-git clone https://github.com/<pseudo>/webtoon-translator.git
+git clone https://github.com/matteoroncelay/webtoon-translator.git
 cd webtoon-translator
 python -m venv .venv
 .venv\Scripts\Activate.ps1        # Linux / macOS : source .venv/bin/activate

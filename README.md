@@ -140,8 +140,6 @@ pipeline complet avec de faux composants (détecteurs, OCR et LLM simulés).
 
 ## Limites connues
 
-- Les modèles YOLO ont été entraînés sur peu d'images annotées ; le modèle de personnages ne
-  reconnaît que les personnages de la série sur laquelle il a été entraîné.
 - L'analyse de la queue dépend de la qualité de la segmentation : elle échoue surtout sur les
   queues très courtes ou collées à une autre bulle.
 - Le texte original est recouvert d'un fond blanc, et non effacé par reconstruction de l'image :
